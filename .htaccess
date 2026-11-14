@@ -1,0 +1,41 @@
+# Cothren Plumbing & Construction
+RewriteEngine On
+
+# One home address: www goes to https://cothrenplumbingandconstruction.com (same path)
+RewriteCond %{HTTP_HOST} ^www\.cothrenplumbingandconstruction\.com$ [NC]
+RewriteRule ^(.*)$ https://cothrenplumbingandconstruction.com/$1 [R=301,L]
+
+# Force https on whatever address the site is served from.
+RewriteCond %{HTTPS} !=on
+RewriteCond %{HTTP:X-Forwarded-Proto} !https
+RewriteRule ^(.*)$ https://%{HTTP_HOST}/$1 [R=301,L]
+
+# Clean page addresses: /index.html goes to /, and /services.html goes to /services
+RewriteCond %{THE_REQUEST} \s/+index\.html[\s?] [NC]
+RewriteRule ^index\.html$ https://%{HTTP_HOST}/ [R=301,L]
+RewriteCond %{THE_REQUEST} \s/+([^\s?]+)\.html[\s?] [NC]
+RewriteRule ^ https://%{HTTP_HOST}/%1 [R=301,L]
+
+# Serve /services from services.html
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteCond %{DOCUMENT_ROOT}/$1.html -f
+RewriteRule ^([^/.]+)$ $1.html [L]
+
+DirectoryIndex index.html
+
+<IfModule mod_expires.c>
+  ExpiresActive On
+  ExpiresByType image/jpeg "access plus 7 days"
+  ExpiresByType image/png "access plus 7 days"
+  ExpiresByType image/webp "access plus 7 days"
+  ExpiresByType text/css "access plus 7 days"
+  ExpiresByType application/javascript "access plus 7 days"
+</IfModule>
+
+# Keep preview and test addresses out of search results
+SetEnvIfNoCase Host "\.hostingersite\.com$" COTHREN_STAGING
+SetEnvIfNoCase Host "\.eaglewebcreation\.com$" COTHREN_STAGING
+<IfModule mod_headers.c>
+  Header set X-Robots-Tag "noindex, nofollow" env=COTHREN_STAGING
+</IfModule>

@@ -1,0 +1,5 @@
+# Cothren Plumbing & Construction
+User-agent: *
+Allow: /
+
+Sitemap: https://cothrenplumbingandconstruction.com/sitemap.xml
