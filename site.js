@@ -170,6 +170,9 @@
         fbtns.forEach(function (x) { x.setAttribute("aria-pressed", x === b ? "true" : "false"); });
         figs.forEach(function (fg) { fg.classList.toggle("out", f !== "all" && fg.getAttribute("data-k").indexOf(f) < 0); });
         gal.classList.toggle("filtered", f !== "all");
+        var empty = $(".gal-empty"), none = shownFigs().length === 0;
+        if (empty) empty.hidden = !none;
+        gal.hidden = none;
       });
     });
     var lb = $(".lightbox"), lbImg = $("img", lb), lbCap = $("p", lb), cur = 0, lastFocus = null;
