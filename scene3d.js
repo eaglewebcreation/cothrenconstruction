@@ -217,6 +217,7 @@
       last: 8,
       still: 3.2,
       center: [3.2, 1.0, -3.2],
+      dx: 2.4,
       fit: [15, 11.5],
       baseY: 0.56,
       yaw: 0.55, pitch: 0.36, sway: 0.16,
@@ -590,14 +591,19 @@
       var x1 = x * cy - z * sy, z1 = x * sy + z * cy;
       var y2 = y * cp + z1 * sp, z2 = z1 * cp - y * sp; // camera above, looking down
       var f = 30 / (30 + z2);
-      return [W / 2 + x1 * scale * f, H * sc.baseY - y2 * scale * f, z2];
+      return [W / 2 + ((sc.dx || 0) + x1 * f) * scale, H * sc.baseY - y2 * scale * f, z2];
     }
     ctx.clearRect(0, 0, W, H);
     ctx.lineCap = "round"; ctx.lineJoin = "round";
     var g = project([sc.center[0], 0, sc.center[2]]);
-    var grad = ctx.createRadialGradient(g[0], g[1], 0, g[0], g[1], scale * 7);
-    grad.addColorStop(0, "rgba(0,0,0,0.09)"); grad.addColorStop(1, "rgba(0,0,0,0)");
-    ctx.fillStyle = grad; ctx.beginPath(); ctx.ellipse(g[0], g[1], scale * 7, scale * 2, 0, 0, Math.PI * 2); ctx.fill();
+    // keep the ground shadow inside the canvas so its edges never get cut off
+    var k = Math.max(0, Math.min(1, (Math.min(g[0], W - g[0]) - 2) / (scale * 7), (H - g[1] - 2) / (scale * 2)));
+    var rx = scale * 7 * k, ry = scale * 2 * k;
+    if (rx > 1) {
+      var grad = ctx.createRadialGradient(g[0], g[1], 0, g[0], g[1], rx);
+      grad.addColorStop(0, "rgba(0,0,0,0.09)"); grad.addColorStop(1, "rgba(0,0,0,0)");
+      ctx.fillStyle = grad; ctx.beginPath(); ctx.ellipse(g[0], g[1], rx, ry, 0, 0, Math.PI * 2); ctx.fill();
+    }
 
     var fr = sc.frame(T), all = sc.stat.concat(fr.S), last = sc.last;
     for (var i = 0; i < all.length; i++) {
@@ -646,9 +652,10 @@
     var W = 0, H = 0, dpr = 1;
     function size() {
       var r = wrap.getBoundingClientRect();
-      dpr = Math.min(window.devicePixelRatio || 1, small ? 1.5 : 2);
+      dpr = Math.min(window.devicePixelRatio || 1, 2); // full sharpness on phones too
       W = Math.max(1, r.width); H = Math.max(1, r.height);
-      canvas.width = Math.round(W * dpr); canvas.height = Math.round(H * dpr);
+      var cw = Math.round(W * dpr), ch = Math.round(H * dpr);
+      if (canvas.width !== cw || canvas.height !== ch) { canvas.width = cw; canvas.height = ch; }
     }
     var yaw = sc.yaw, pitch = sc.pitch, px = 0, py = 0, so = 0, start = 0, BUILD = sc.build || 2400;
     var running = false, visible = true, raf = 0, last = 0;
